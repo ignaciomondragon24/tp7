@@ -1,186 +1,276 @@
 #include <stdio.h>
+#include <string.h>
+#include <float.h>
 
-struct persona {
-    char nombre[50];
-    float precio;
-    float horas;
-    float plata;
-};
+// Constantes
+#define MAX_ANALISTAS 10
+#define MAX_PROYECTOS 15
+#define MAX_PLANILLAS 100
+#define MAX_NOMBRE 50
 
-struct trabajo {
-    int persona;
-    int proyecto;
-    float tiempo;
-};
+// Funciones del programa
+void cargarAnalistas(char nombres[][MAX_NOMBRE], float valorHora[]);
+void cargarPlanillas(int numeroAnalista[], int numeroProyecto[], float horasTrabajadas[], int *numPlanillas);
+void procesarDatos(char nombres[][MAX_NOMBRE], float valorHora[], int numeroAnalista[], int numeroProyecto[], 
+                   float horasTrabajadas[], int numPlanillas, float totalHoras[], float horasProyecto[], 
+                   float horasAnalistaProyecto[][MAX_PROYECTOS]);
+void calcularSueldos(float valorHora[], float totalHoras[], float sueldos[]);
+void mostrarHorasTotales(char nombres[][MAX_NOMBRE], float totalHoras[]);
+void mostrarHorasAnalistaProyecto(char nombres[][MAX_NOMBRE], float horasAnalistaProyecto[][MAX_PROYECTOS]);
+void mostrarHorasProyecto(float horasProyecto[]);
+void buscarMenorProyecto1(char nombres[][MAX_NOMBRE], float horasAnalistaProyecto[][MAX_PROYECTOS]);
+void mostrarSueldos(char nombres[][MAX_NOMBRE], float sueldos[]);
+void buscarMayorSueldo(char nombres[][MAX_NOMBRE], float sueldos[]);
+void contarAnalistas5Horas(char nombres[][MAX_NOMBRE], float horasAnalistaProyecto[][MAX_PROYECTOS]);
+void ordenarPorSueldo(char nombres[][MAX_NOMBRE], float valorHora[], float sueldos[]);
+void mostrarOrdenados(char nombres[][MAX_NOMBRE], float valorHora[], float sueldos[]);
 
 int main() {
-    struct persona gente[10];
-    struct trabajo trabajos[50];
-    float horasProyectos[15];
-    float matriz[10][15];
-    int cuantos = 0;
-    int i, j;
+    // Arrays para almacenar los datos
+    char nombres[MAX_ANALISTAS][MAX_NOMBRE];
+    float valorHora[MAX_ANALISTAS];
+    float totalHoras[MAX_ANALISTAS] = {0};
+    float sueldos[MAX_ANALISTAS] = {0};
     
-    // poner en cero
-    for (i = 0; i < 15; i++) {
-        horasProyectos[i] = 0;
+    // Arrays para las planillas
+    int numeroAnalista[MAX_PLANILLAS];
+    int numeroProyecto[MAX_PLANILLAS];
+    float horasTrabajadas[MAX_PLANILLAS];
+    int numPlanillas = 0;
+    
+    // Arrays para los calculos
+    float horasProyecto[MAX_PROYECTOS] = {0};
+    float horasAnalistaProyecto[MAX_ANALISTAS][MAX_PROYECTOS] = {0};
+    
+    printf("=== SISTEMA DE CONSULTORA ===\n");
+    
+    // Cargar datos de analistas
+    cargarAnalistas(nombres, valorHora);
+    
+    // Cargar planillas
+    cargarPlanillas(numeroAnalista, numeroProyecto, horasTrabajadas, &numPlanillas);
+    
+    // Procesar datos
+    procesarDatos(nombres, valorHora, numeroAnalista, numeroProyecto, horasTrabajadas, 
+                  numPlanillas, totalHoras, horasProyecto, horasAnalistaProyecto);
+    
+    // Calcular sueldos
+    calcularSueldos(valorHora, totalHoras, sueldos);
+    
+    // Mostrar resultados
+    printf("\n=== RESULTADOS ===\n");
+    mostrarHorasTotales(nombres, totalHoras);
+    mostrarHorasAnalistaProyecto(nombres, horasAnalistaProyecto);
+    mostrarHorasProyecto(horasProyecto);
+    buscarMenorProyecto1(nombres, horasAnalistaProyecto);
+    mostrarSueldos(nombres, sueldos);
+    buscarMayorSueldo(nombres, sueldos);
+    contarAnalistas5Horas(nombres, horasAnalistaProyecto);
+    ordenarPorSueldo(nombres, valorHora, sueldos);
+    mostrarOrdenados(nombres, valorHora, sueldos);
+    
+    return 0;
+}
+
+// Funcion para cargar los datos de los analistas
+void cargarAnalistas(char nombres[][MAX_NOMBRE], float valorHora[]) {
+    printf("\n--- CARGAR ANALISTAS ---\n");
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        printf("Ingrese nombre del analista %d: ", i + 1);
+        scanf("%s", nombres[i]);
+        printf("Ingrese valor hora del analista %d: ", i + 1);
+        scanf("%f", &valorHora[i]);
     }
-    for (i = 0; i < 10; i++) {
-        for (j = 0; j < 15; j++) {
-            matriz[i][j] = 0;
-        }
-    }
+}
+
+// Funcion para cargar las planillas
+void cargarPlanillas(int numeroAnalista[], int numeroProyecto[], float horasTrabajadas[], int *numPlanillas) {
+    printf("\n--- CARGAR PLANILLAS ---\n");
+    printf("Ingrese las planillas (0 en numero de analista para terminar):\n");
     
-    printf("programa de trabajadores\n");
-    printf("escriba los datos:\n");
-    
-    // leer gente
-    for (i = 0; i < 10; i++) {
-        printf("nombre persona %d: ", i + 1);
-        scanf("%s", gente[i].nombre);
-        printf("cuanto cobra por hora: ");
-        scanf("%f", &gente[i].precio);
-        gente[i].horas = 0;
-        gente[i].plata = 0;
-    }
-    
-    // leer trabajos
-    printf("\nescribir trabajos hechos (0 para parar):\n");
-    int seguir = 1;
-    while (seguir) {
-        printf("\ntrabajo numero %d:\n", cuantos + 1);
-        printf("que persona (1 a 10, 0 para parar): ");
-        scanf("%d", &trabajos[cuantos].persona);
+    int continuar = 1;
+    while (continuar) {
+        printf("\nPlanilla %d:\n", (*numPlanillas) + 1);
+        printf("Numero de analista (1-10, 0 para terminar): ");
+        scanf("%d", &numeroAnalista[*numPlanillas]);
         
-        if (trabajos[cuantos].persona == 0) {
-            seguir = 0;
+        if (numeroAnalista[*numPlanillas] == 0) {
+            continuar = 0;
         }
-        else if (trabajos[cuantos].persona < 1 || trabajos[cuantos].persona > 10) {
-            printf("mal numero\n");
+        else if (numeroAnalista[*numPlanillas] < 1 || numeroAnalista[*numPlanillas] > MAX_ANALISTAS) {
+            printf("Error: Numero de analista debe ser entre 1 y %d\n", MAX_ANALISTAS);
         }
         else {
-            printf("que proyecto (1 a 15): ");
-            scanf("%d", &trabajos[cuantos].proyecto);
+            printf("Numero de proyecto (1-15): ");
+            scanf("%d", &numeroProyecto[*numPlanillas]);
             
-            if (trabajos[cuantos].proyecto < 1 || trabajos[cuantos].proyecto > 15) {
-                printf("mal numero\n");
+            if (numeroProyecto[*numPlanillas] < 1 || numeroProyecto[*numPlanillas] > MAX_PROYECTOS) {
+                printf("Error: Numero de proyecto debe ser entre 1 y %d\n", MAX_PROYECTOS);
             }
             else {
-                printf("cuantas horas: ");
-                scanf("%f", &trabajos[cuantos].tiempo);
-                cuantos++;
+                printf("Horas trabajadas: ");
+                scanf("%f", &horasTrabajadas[*numPlanillas]);
+                (*numPlanillas)++;
             }
         }
     }
+}
+
+// Funcion para procesar los datos de las planillas
+void procesarDatos(char nombres[][MAX_NOMBRE], float valorHora[], int numeroAnalista[], int numeroProyecto[], 
+                   float horasTrabajadas[], int numPlanillas, float totalHoras[], float horasProyecto[], 
+                   float horasAnalistaProyecto[][MAX_PROYECTOS]) {
     
-    // hacer cuentas
-    for (i = 0; i < cuantos; i++) {
-        int cual = trabajos[i].persona - 1;
-        int proyecto = trabajos[i].proyecto - 1;
-        float tiempo = trabajos[i].tiempo;
+    for (int i = 0; i < numPlanillas; i++) {
+        int analista = numeroAnalista[i] - 1;
+        int proyecto = numeroProyecto[i] - 1;
+        float horas = horasTrabajadas[i];
         
-        gente[cual].horas += tiempo;
-        horasProyectos[proyecto] += tiempo;
-        matriz[cual][proyecto] += tiempo;
+        // Acumular horas totales por analista
+        totalHoras[analista] += horas;
+        
+        // Acumular horas por proyecto
+        horasProyecto[proyecto] += horas;
+        
+        // Acumular horas por analista por proyecto
+        horasAnalistaProyecto[analista][proyecto] += horas;
     }
-    
-    // calcular plata
-    for (i = 0; i < 10; i++) {
-        gente[i].plata = gente[i].horas * gente[i].precio;
+}
+
+// Funcion para calcular sueldos
+void calcularSueldos(float valorHora[], float totalHoras[], float sueldos[]) {
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        sueldos[i] = totalHoras[i] * valorHora[i];
     }
-    
-    printf("\nRESULTADOS:\n");
-    
-    // a) cuantas horas trabajo cada uno
-    printf("\na) horas de cada persona:\n");
-    for (i = 0; i < 10; i++) {
-        printf("%s: %.2f horas\n", gente[i].nombre, gente[i].horas);
+}
+
+// Funcion para mostrar horas totales por analista
+void mostrarHorasTotales(char nombres[][MAX_NOMBRE], float totalHoras[]) {
+    printf("\n1) Horas totales por analista:\n");
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        printf("   %s: %.2f horas\n", nombres[i], totalHoras[i]);
     }
-    
-    // b) horas por persona en cada proyecto
-    printf("\nb) horas de cada persona en cada proyecto:\n");
-    for (i = 0; i < 10; i++) {
-        printf("%s:\n", gente[i].nombre);
-        for (j = 0; j < 15; j++) {
-            if (matriz[i][j] > 0) {
-                printf("  proyecto %d: %.2f horas\n", j + 1, matriz[i][j]);
+}
+
+// Funcion para mostrar horas por analista en cada proyecto
+void mostrarHorasAnalistaProyecto(char nombres[][MAX_NOMBRE], float horasAnalistaProyecto[][MAX_PROYECTOS]) {
+    printf("\n2) Horas por analista en cada proyecto:\n");
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        printf("   %s:\n", nombres[i]);
+        for (int j = 0; j < MAX_PROYECTOS; j++) {
+            if (horasAnalistaProyecto[i][j] > 0) {
+                printf("      Proyecto %d: %.2f horas\n", j + 1, horasAnalistaProyecto[i][j]);
             }
         }
     }
+}
+
+// Funcion para mostrar horas totales por proyecto
+void mostrarHorasProyecto(float horasProyecto[]) {
+    printf("\n3) Horas totales por proyecto:\n");
+    for (int i = 0; i < MAX_PROYECTOS; i++) {
+        if (horasProyecto[i] > 0) {
+            printf("   Proyecto %d: %.2f horas\n", i + 1, horasProyecto[i]);
+        }
+    }
+}
+
+// Funcion para buscar analista que trabajo menos en proyecto 1
+void buscarMenorProyecto1(char nombres[][MAX_NOMBRE], float horasAnalistaProyecto[][MAX_PROYECTOS]) {
+    printf("\n4) Analista que trabajo menos en proyecto 1:\n");
+    int menorAnalista = -1;
+    float menorHoras = FLT_MAX;
     
-    // c) horas por proyecto
-    printf("\nc) horas de cada proyecto:\n");
-    for (i = 0; i < 15; i++) {
-        if (horasProyectos[i] > 0) {
-            printf("proyecto %d: %.2f horas\n", i + 1, horasProyectos[i]);
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        if (horasAnalistaProyecto[i][0] > 0 && horasAnalistaProyecto[i][0] < menorHoras) {
+            menorHoras = horasAnalistaProyecto[i][0];
+            menorAnalista = i;
         }
     }
     
-    // d) quien trabajo menos en proyecto 1
-    printf("\nd) quien trabajo menos en proyecto 1:\n");
-    int menor = -1;
-    float minimo = 999999;
-    for (i = 0; i < 10; i++) {
-        if (matriz[i][0] > 0 && matriz[i][0] < minimo) {
-            minimo = matriz[i][0];
-            menor = i;
-        }
-    }
-    if (menor != -1) {
-        printf("%s trabajo menos: %.2f horas\n", gente[menor].nombre, minimo);
+    if (menorAnalista != -1) {
+        printf("   %s trabajo menos en proyecto 1: %.2f horas\n", 
+               nombres[menorAnalista], menorHoras);
     } else {
-        printf("nadie trabajo en proyecto 1\n");
+        printf("   Ningun analista trabajo en proyecto 1\n");
     }
-    
-    // e) plata de cada uno
-    printf("\ne) plata de cada persona:\n");
-    for (i = 0; i < 10; i++) {
-        printf("%s: $%.2f\n", gente[i].nombre, gente[i].plata);
+}
+
+// Funcion para mostrar sueldos
+void mostrarSueldos(char nombres[][MAX_NOMBRE], float sueldos[]) {
+    printf("\n5) Sueldo de cada analista:\n");
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        printf("   %s: $%.2f\n", nombres[i], sueldos[i]);
     }
+}
+
+// Funcion para buscar analista con mayor sueldo
+void buscarMayorSueldo(char nombres[][MAX_NOMBRE], float sueldos[]) {
+    printf("\n6) Analista que cobro mas:\n");
+    int mayorSueldo = 0;
     
-    // f) quien gano mas plata
-    printf("\nf) quien gano mas:\n");
-    int masPlata = 0;
-    for (i = 1; i < 10; i++) {
-        if (gente[i].plata > gente[masPlata].plata) {
-            masPlata = i;
+    for (int i = 1; i < MAX_ANALISTAS; i++) {
+        if (sueldos[i] > sueldos[mayorSueldo]) {
+            mayorSueldo = i;
         }
     }
-    printf("%s gano mas: $%.2f\n", gente[masPlata].nombre, gente[masPlata].plata);
     
-    // g) los que trabajaron poco
-    printf("\ng) los que trabajaron menos de 5 horas:\n");
+    printf("   %s cobro mas: $%.2f\n", 
+           nombres[mayorSueldo], sueldos[mayorSueldo]);
+}
+
+// Funcion para contar analistas que trabajaron menos de 5 horas
+void contarAnalistas5Horas(char nombres[][MAX_NOMBRE], float horasAnalistaProyecto[][MAX_PROYECTOS]) {
+    printf("\n7) Analistas que trabajaron menos de 5 horas en algun proyecto:\n");
     int contador = 0;
-    for (i = 0; i < 10; i++) {
+    
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
         int encontrado = 0;
-        for (j = 0; j < 15 && encontrado == 0; j++) {
-            if (matriz[i][j] > 0 && matriz[i][j] < 5) {
-                printf("%s trabajo %.2f horas en proyecto %d\n", 
-                       gente[i].nombre, matriz[i][j], j + 1);
+        for (int j = 0; j < MAX_PROYECTOS && !encontrado; j++) {
+            if (horasAnalistaProyecto[i][j] > 0 && horasAnalistaProyecto[i][j] < 5) {
+                printf("   %s trabajo %.2f horas en proyecto %d\n", 
+                       nombres[i], horasAnalistaProyecto[i][j], j + 1);
                 contador++;
                 encontrado = 1;
             }
         }
     }
-    printf("total: %d personas\n", contador);
+    printf("   Total: %d analistas\n", contador);
+}
+
+// Funcion para ordenar por sueldo usando burbuja
+void ordenarPorSueldo(char nombres[][MAX_NOMBRE], float valorHora[], float sueldos[]) {
+    char tempNombre[MAX_NOMBRE];
+    float tempValor, tempSueldo;
     
-    // h) ordenar por plata
-    printf("\nh) ordenados por plata:\n");
-    struct persona temp;
-    for (i = 0; i < 9; i++) {
-        for (j = 0; j < 9 - i; j++) {
-            if (gente[j].plata < gente[j + 1].plata) {
-                temp = gente[j];
-                gente[j] = gente[j + 1];
-                gente[j + 1] = temp;
+    // Algoritmo de burbuja
+    for (int i = 0; i < MAX_ANALISTAS - 1; i++) {
+        for (int j = 0; j < MAX_ANALISTAS - 1 - i; j++) {
+            if (sueldos[j] < sueldos[j + 1]) {
+                // Intercambiar nombres
+                strcpy(tempNombre, nombres[j]);
+                strcpy(nombres[j], nombres[j + 1]);
+                strcpy(nombres[j + 1], tempNombre);
+                
+                // Intercambiar valores hora
+                tempValor = valorHora[j];
+                valorHora[j] = valorHora[j + 1];
+                valorHora[j + 1] = tempValor;
+                
+                // Intercambiar sueldos
+                tempSueldo = sueldos[j];
+                sueldos[j] = sueldos[j + 1];
+                sueldos[j + 1] = tempSueldo;
             }
         }
     }
-    
-    for (i = 0; i < 10; i++) {
-        printf("%s - $%.2f por hora - total $%.2f\n", 
-               gente[i].nombre, gente[i].precio, gente[i].plata);
+}
+
+// Funcion para mostrar analistas ordenados
+void mostrarOrdenados(char nombres[][MAX_NOMBRE], float valorHora[], float sueldos[]) {
+    printf("\n8) Analistas ordenados por sueldo (descendente):\n");
+    for (int i = 0; i < MAX_ANALISTAS; i++) {
+        printf("   %s - Valor hora: $%.2f - Sueldo: $%.2f\n", 
+               nombres[i], valorHora[i], sueldos[i]);
     }
-    
-    return 0;
 }
