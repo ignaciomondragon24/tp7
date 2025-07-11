@@ -31,5 +31,5 @@ Cantidad de analistas que hayan trabajado menos de 5 hs en alguno de los proyect
 Imprimir ordenado en forma descendente por sueldo de los analista: nombre valor de la hora y sueldo
 
 
-![Sin título (1)](https://github.com/user-attachments/assets/6075186b-b71b-462e-91a6-425770a453d4)
+
 
