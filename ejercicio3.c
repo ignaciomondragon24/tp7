@@ -1,143 +1,186 @@
 #include <stdio.h>
-#include <string.h> // Agregado para usar strcpy
+
+struct persona {
+    char nombre[50];
+    float precio;
+    float horas;
+    float plata;
+};
+
+struct trabajo {
+    int persona;
+    int proyecto;
+    float tiempo;
+};
 
 int main() {
-    char nombre[10][50];
-    float costoHora[10];
-    float tiempoTotal[10] = {0};
-    float pagoTotal[10] = {0};
-    float tiemposPorProyecto[15] = {0};
-    float matriz[10][15] = {0};
-    int numEmpleado, numProyecto, totalRegistros = 0;
-    float tiempoTrabajado;
+    struct persona gente[10];
+    struct trabajo trabajos[50];
+    float horasProyectos[15];
+    float matriz[10][15];
+    int cuantos = 0;
     int i, j;
-
-    printf("SISTEMA DE CONTROL DE EMPLEADOS Y PROYECTOS\n");
-    printf("Ingresa la informacion de los empleados:\n\n");
-    for (i = 0; i < 10; i++) {
-        printf("Empleado numero %d:\n", i + 1);
-        printf("  Nombre: ");
-        scanf("%s", nombre[i]);
-        printf("  Valor por hora: $");
-        scanf("%f", &costoHora[i]);
+    
+    // poner en cero
+    for (i = 0; i < 15; i++) {
+        horasProyectos[i] = 0;
     }
-
-    printf("\nAhora ingresa los registros de trabajo (0 para salir):\n");
-    printf("Registro %d:\n", totalRegistros + 1);
-    printf("  Numero de empleado (1-10, 0 para salir): ");
-    scanf("%d", &numEmpleado);
-    while (numEmpleado != 0) {
-        if (numEmpleado < 1 || numEmpleado > 10) {
-            printf("  Error: debe ser entre 1 y 10\n\n");
-        } else {
-            printf("  Numero de proyecto (1-15): ");
-            scanf("%d", &numProyecto);
-            if (numProyecto < 1 || numProyecto > 15) {
-                printf("  Error: debe ser entre 1 y 15\n\n");
-            } else {
-                printf("  Horas trabajadas: ");
-                scanf("%f", &tiempoTrabajado);
-                tiempoTotal[numEmpleado-1] += tiempoTrabajado;
-                tiemposPorProyecto[numProyecto-1] += tiempoTrabajado;
-                matriz[numEmpleado-1][numProyecto-1] += tiempoTrabajado;
-                totalRegistros++;
-                printf("\n");
+    for (i = 0; i < 10; i++) {
+        for (j = 0; j < 15; j++) {
+            matriz[i][j] = 0;
+        }
+    }
+    
+    printf("programa de trabajadores\n");
+    printf("escriba los datos:\n");
+    
+    // leer gente
+    for (i = 0; i < 10; i++) {
+        printf("nombre persona %d: ", i + 1);
+        scanf("%s", gente[i].nombre);
+        printf("cuanto cobra por hora: ");
+        scanf("%f", &gente[i].precio);
+        gente[i].horas = 0;
+        gente[i].plata = 0;
+    }
+    
+    // leer trabajos
+    printf("\nescribir trabajos hechos (0 para parar):\n");
+    int seguir = 1;
+    while (seguir) {
+        printf("\ntrabajo numero %d:\n", cuantos + 1);
+        printf("que persona (1 a 10, 0 para parar): ");
+        scanf("%d", &trabajos[cuantos].persona);
+        
+        if (trabajos[cuantos].persona == 0) {
+            seguir = 0;
+        }
+        else if (trabajos[cuantos].persona < 1 || trabajos[cuantos].persona > 10) {
+            printf("mal numero\n");
+        }
+        else {
+            printf("que proyecto (1 a 15): ");
+            scanf("%d", &trabajos[cuantos].proyecto);
+            
+            if (trabajos[cuantos].proyecto < 1 || trabajos[cuantos].proyecto > 15) {
+                printf("mal numero\n");
+            }
+            else {
+                printf("cuantas horas: ");
+                scanf("%f", &trabajos[cuantos].tiempo);
+                cuantos++;
             }
         }
-        printf("Registro %d:\n", totalRegistros + 1);
-        printf("  Numero de empleado (1-10, 0 para salir): ");
-        scanf("%d", &numEmpleado);
     }
-
-    for (i = 0; i < 10; i++) {
-        pagoTotal[i] = tiempoTotal[i] * costoHora[i];
+    
+    // hacer cuentas
+    for (i = 0; i < cuantos; i++) {
+        int cual = trabajos[i].persona - 1;
+        int proyecto = trabajos[i].proyecto - 1;
+        float tiempo = trabajos[i].tiempo;
+        
+        gente[cual].horas += tiempo;
+        horasProyectos[proyecto] += tiempo;
+        matriz[cual][proyecto] += tiempo;
     }
-
-    printf("\n======= RESULTADOS DEL ANALISIS =======\n");
-    printf("\na) Tiempo total trabajado por cada empleado:\n");
+    
+    // calcular plata
     for (i = 0; i < 10; i++) {
-        printf("   %s: %.2f horas\n", nombre[i], tiempoTotal[i]);
+        gente[i].plata = gente[i].horas * gente[i].precio;
     }
-    printf("\nb) Tiempo de cada empleado en cada proyecto:\n");
+    
+    printf("\nRESULTADOS:\n");
+    
+    // a) cuantas horas trabajo cada uno
+    printf("\na) horas de cada persona:\n");
     for (i = 0; i < 10; i++) {
-        printf("   %s:\n", nombre[i]);
+        printf("%s: %.2f horas\n", gente[i].nombre, gente[i].horas);
+    }
+    
+    // b) horas por persona en cada proyecto
+    printf("\nb) horas de cada persona en cada proyecto:\n");
+    for (i = 0; i < 10; i++) {
+        printf("%s:\n", gente[i].nombre);
         for (j = 0; j < 15; j++) {
             if (matriz[i][j] > 0) {
-                printf("     Proyecto %d: %.2f horas\n", j + 1, matriz[i][j]);
+                printf("  proyecto %d: %.2f horas\n", j + 1, matriz[i][j]);
             }
         }
     }
-    printf("\nc) Tiempo total trabajado en cada proyecto:\n");
+    
+    // c) horas por proyecto
+    printf("\nc) horas de cada proyecto:\n");
     for (i = 0; i < 15; i++) {
-        if (tiemposPorProyecto[i] > 0) {
-            printf("   Proyecto %d: %.2f horas\n", i + 1, tiemposPorProyecto[i]);
+        if (horasProyectos[i] > 0) {
+            printf("proyecto %d: %.2f horas\n", i + 1, horasProyectos[i]);
         }
     }
-    printf("\nd) Empleado que menos trabajo en proyecto 1:\n");
-    int empleadoMenor = -1;
-    float tiempoMenor = 9999.0;
+    
+    // d) quien trabajo menos en proyecto 1
+    printf("\nd) quien trabajo menos en proyecto 1:\n");
+    int menor = -1;
+    float minimo = 999999;
     for (i = 0; i < 10; i++) {
-        if (matriz[i][0] > 0 && matriz[i][0] < tiempoMenor) {
-            tiempoMenor = matriz[i][0];
-            empleadoMenor = i;
+        if (matriz[i][0] > 0 && matriz[i][0] < minimo) {
+            minimo = matriz[i][0];
+            menor = i;
         }
     }
-    if (empleadoMenor >= 0) {
-        printf("   %s trabajo %.2f horas en proyecto 1\n", nombre[empleadoMenor], tiempoMenor);
+    if (menor != -1) {
+        printf("%s trabajo menos: %.2f horas\n", gente[menor].nombre, minimo);
     } else {
-        printf("   Ningun empleado trabajo en proyecto 1\n");
+        printf("nadie trabajo en proyecto 1\n");
     }
-    printf("\ne) Pago total de cada empleado:\n");
+    
+    // e) plata de cada uno
+    printf("\ne) plata de cada persona:\n");
     for (i = 0; i < 10; i++) {
-        printf("   %s: $%.2f\n", nombre[i], pagoTotal[i]);
+        printf("%s: $%.2f\n", gente[i].nombre, gente[i].plata);
     }
-    printf("\nf) Empleado que mas dinero cobro:\n");
-    int empleadoMayor = 0;
+    
+    // f) quien gano mas plata
+    printf("\nf) quien gano mas:\n");
+    int masPlata = 0;
     for (i = 1; i < 10; i++) {
-        if (pagoTotal[i] > pagoTotal[empleadoMayor]) {
-            empleadoMayor = i;
+        if (gente[i].plata > gente[masPlata].plata) {
+            masPlata = i;
         }
     }
-    printf("   %s cobro $%.2f\n", nombre[empleadoMayor], pagoTotal[empleadoMayor]);
-    printf("\ng) Empleados con menos de 5 horas en algun proyecto:\n");
+    printf("%s gano mas: $%.2f\n", gente[masPlata].nombre, gente[masPlata].plata);
+    
+    // g) los que trabajaron poco
+    printf("\ng) los que trabajaron menos de 5 horas:\n");
     int contador = 0;
     for (i = 0; i < 10; i++) {
-        int yaEncontrado = 0;
-        for (j = 0; j < 15 && !yaEncontrado; j++) {
-            if (matriz[i][j] > 0 && matriz[i][j] < 5.0) {
-                printf("   %s trabajo %.2f horas en proyecto %d\n", nombre[i], matriz[i][j], j + 1);
+        int encontrado = 0;
+        for (j = 0; j < 15 && encontrado == 0; j++) {
+            if (matriz[i][j] > 0 && matriz[i][j] < 5) {
+                printf("%s trabajo %.2f horas en proyecto %d\n", 
+                       gente[i].nombre, matriz[i][j], j + 1);
                 contador++;
-                yaEncontrado = 1;
+                encontrado = 1;
             }
         }
     }
-    printf("   Total de empleados: %d\n", contador);
-    // h) Empleados ordenados por pago total (mayor a menor):
-    printf("\nh) Ranking de empleados por pago total (de mayor a menor):\n");
-    // Ordenamiento burbuja mejorado
-    for (i = 0; i < 10 - 1; i++) {
-        for (j = 0; j < 10 - 1 - i; j++) {
-            if (pagoTotal[j] < pagoTotal[j + 1]) {
-                // Intercambiar todos los datos asociados
-                float auxPago = pagoTotal[j];
-                pagoTotal[j] = pagoTotal[j + 1];
-                pagoTotal[j + 1] = auxPago;
-                float auxHora = costoHora[j];
-                costoHora[j] = costoHora[j + 1];
-                costoHora[j + 1] = auxHora;
-                float auxTiempo = tiempoTotal[j];
-                tiempoTotal[j] = tiempoTotal[j + 1];
-                tiempoTotal[j + 1] = auxTiempo;
-                char auxNombre[50];
-                strcpy(auxNombre, nombre[j]);
-                strcpy(nombre[j], nombre[j + 1]);
-                strcpy(nombre[j + 1], auxNombre);
+    printf("total: %d personas\n", contador);
+    
+    // h) ordenar por plata
+    printf("\nh) ordenados por plata:\n");
+    struct persona temp;
+    for (i = 0; i < 9; i++) {
+        for (j = 0; j < 9 - i; j++) {
+            if (gente[j].plata < gente[j + 1].plata) {
+                temp = gente[j];
+                gente[j] = gente[j + 1];
+                gente[j + 1] = temp;
             }
         }
     }
+    
     for (i = 0; i < 10; i++) {
-        printf("   %2d) %-15s | $%7.2f/h | Total: $%8.2f\n", i+1, nombre[i], costoHora[i], pagoTotal[i]);
+        printf("%s - $%.2f por hora - total $%.2f\n", 
+               gente[i].nombre, gente[i].precio, gente[i].plata);
     }
-    printf("\n¡Análisis finalizado!\n");
+    
     return 0;
 }
